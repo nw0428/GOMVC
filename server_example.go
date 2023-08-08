@@ -51,7 +51,8 @@ func StudentIndex(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	dsn := "host=localhost user=davidzabner dbname=gormexample port=5432"
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	var err error
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		fmt.Printf("%s\n", err)
