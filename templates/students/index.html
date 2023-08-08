@@ -1,0 +1,9 @@
+<h1>Students</h1>
+<ul>
+    {{range . }}
+        {{if not .DeletedAt}}
+            <li>{{.}}</li>
+        {{end}}
+    {{end}}
+    <a href="/create">Add Student</a>
+</ul>
