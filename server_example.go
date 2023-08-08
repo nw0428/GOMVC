@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"html/template"
@@ -42,11 +43,30 @@ func TodoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func StudentIndex(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		birthdate, err := time.Parse(time.DateOnly, r.FormValue("birthdate"))
+		if err != nil {
+			fmt.Fprintf(w, "'%s' is not parseable as a date", r.FormValue("birthdate"))
+			return
+		}
+		student := &Student{Name: r.FormValue("name"), Birthdate: birthdate}
+		db.Create(student)
+	}
 	tmpl := template.Must(template.ParseFiles("templates/students/index.html"))
 	var students []Student
 	db.Find(&students)
 	fmt.Println(students)
 	tmpl.Execute(w, students)
+}
+
+func CreateHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles("templates/students/create.html"))
+	tmpl.Execute(w, nil)
+}
+
+func StudentDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	db.Delete(&Student{}, vars["id"])
 }
 
 func main() {
@@ -64,7 +84,11 @@ func main() {
 	var students []Student
 	db.Find(&students)
 	fmt.Println(students)
-	http.HandleFunc("/", TodoHandler)
-	http.HandleFunc("/students/", StudentIndex)
-	http.ListenAndServe(":80", nil)
+
+	r := mux.NewRouter()
+	r.HandleFunc("/", TodoHandler)
+	r.HandleFunc("/students", StudentIndex)
+	r.HandleFunc("/create", CreateHandler)
+	r.HandleFunc("/students/{id}/delete", StudentDeleteHandler)
+	http.ListenAndServe(":8080", r)
 }
